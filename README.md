@@ -40,12 +40,12 @@ graph TD;
 
 ## Komponen Kunci
 
--   `Samre/main.py`: Titik masuk utama yang menjalankan siklus kognitif otonom.
--   `Samre/core/flock_of_thought.py`: Orkestrator utama. Mengelola seluruh siklus, dari pembaruan kebutuhan hingga eksekusi tindakan dan pembelajaran.
--   `Samre/core/needs.py`: Mensimulasikan dan mengelola kebutuhan internal agen.
--   `Samre/core/sws_logic.py`: "Jantung" pengambilan keputusan. Berisi logika untuk menilai dan memberi skor pada tindakan potensial.
--   `Samre/core/executive.py`: Bertindak sebagai fungsi eksekutif, memberikan persetujuan akhir untuk tindakan yang dipilih.
--   `Samre/core/neuromodulator.py`: Mensimulasikan pengaruh zat kimia saraf seperti dopamin (motivasi) dan kortisol (stres) pada pengambilan keputusan.
+-   `main.py`: Titik masuk utama yang menjalankan siklus kognitif otonom.
+-   `flock_of_thought.py`: Orkestrator utama. Mengelola seluruh siklus, dari pembaruan kebutuhan hingga eksekusi tindakan dan pembelajaran.
+-   `needs.py`: Mensimulasikan dan mengelola kebutuhan internal agen.
+-   `sws_logic.py`: "Jantung" pengambilan keputusan. Berisi logika untuk menilai dan memberi skor pada tindakan potensial.
+-   `executive.py`: Bertindak sebagai fungsi eksekutif, memberikan persetujuan akhir untuk tindakan yang dipilih.
+-   `neuromodulator.py`: Mensimulasikan pengaruh zat kimia saraf seperti dopamin (motivasi) dan kortisol (stres) pada pengambilan keputusan.
 
 ## Cara Menjalankan
 
