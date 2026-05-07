@@ -1,8 +1,10 @@
 """
-Metacognition - The Reflective Mind
+Metacognition - The Reflective Mind (v2.1)
 
 This module provides the agent with the ability to reason about its own
 cognitive processes, performance, and limitations.
+
+Now generates more specific, actionable goals for the Planner.
 """
 
 from typing import Dict, List, Optional, Any
@@ -44,8 +46,12 @@ class Metacognition:
             if stats["total"] > 5:
                 failure_rate = 1.0 - (stats["success"] / stats["total"])
                 if failure_rate > 0.6:
-                    suggestion = f"Improve the reliability of the '{action}' action"
+                    # Be specific for the planner
+                    suggestion = f"Improve reliability of {action}"
                     print(f"🤔 METACOGNITION: High failure rate for action '{action}'. Suggesting goal: '{suggestion}'")
+                    # Reset stats to give the new plan a chance to work without being immediately overwritten
+                    stats["total"] = 0
+                    stats["success"] = 0
                     return suggestion
 
         # 2. Analyze plan failures
@@ -53,7 +59,8 @@ class Metacognition:
             recent_plans = self.plan_history[-3:]
             failed_plans = [p for p in recent_plans if not p['success']]
             if len(failed_plans) >= 2:
-                 suggestion = "Re-evaluate planning and revision strategies"
+                 # This is still a bit generic, but let's make it a known goal for the planner
+                 suggestion = "Refactor SemanticGarden to improve planning"
                  print(f"🤔 METACOGNITION: Multiple recent plan failures. Suggesting goal: '{suggestion}'")
                  return suggestion
 

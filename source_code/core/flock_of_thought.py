@@ -86,26 +86,37 @@ class FlockOfThought:
         """Read own source code to build an initial IDF model and populate the Garden."""
         print("--- Bootstrapping Self-Awareness ---")
         source_files = [
-            "core/flock_of_thought.py", 
+            "core/flock_of_thought.py",
             "core/cognitive_core.py",
-            "core/samantic_garden.py", 
-            "core/needs.py", 
+            "core/samantic_garden.py",
+            "core/needs.py",
             "core/sws_logic.py",
         ]
+        
+        # Step 1: Collect all documents into a corpus first.
+        corpus_data = {} # Store path -> content mapping
         corpus = []
+        print("    1. Collecting bootstrap corpus...")
         for file_path in source_files:
             self.explored_paths.add(file_path)
             read_result = self.file_manager.read_file(file_path)
             if "content" in read_result:
                 content = read_result["content"]
                 corpus.append(content)
-                # Initial seeding of the Samantic Garden
-                self.process_and_store(content, file_path)
+                corpus_data[file_path] = content
             else:
                 print(f"⚠️  Could not read own file for bootstrap: {file_path}")
         
+        # Step 2: Build the IDF model from the complete corpus.
         if corpus:
+            print("    2. Building IDF model from corpus...")
             self.text_processor.update_idf_counts(corpus)
+            
+        # Step 3: Now, process each document to populate the Garden using the built IDF model.
+        print("    3. Populating Samantic Garden with initial knowledge...")
+        for file_path, content in corpus_data.items():
+            self.process_and_store(content, file_path)
+
         self.samantic_garden.consolidate_memories()  # Initial consolidation
         print("--- Bootstrap Complete ---")
 
@@ -134,9 +145,7 @@ class FlockOfThought:
                 
                 if target.startswith("Samre/"):
                     target = target[6:]
-                self.learning_queue.append(target)
-
-                self.learning_queue.append(task["target"])
+                self.learning_queue.append(target) # Only append the cleaned path
             return self.current_task["action"]
 
         # 3. Plan Following (restored logic)
@@ -226,16 +235,11 @@ class FlockOfThought:
 
             elif action == "GEOLOGY_EXPLORE":
                 if self.current_task and action == self.current_task["action"]:
-                    if execution_success:
-                        print(f"✅ Task {self.current_task['id']} ({action}) completed.")
-                    else:
-                        print(f"⚠️ Task {self.current_task['id']} ({action}) FAILED. Moving on.")
-                    self.task_manager.complete_current_task()
-                    self.current_task = None
                     target = self.current_task["target"]
                     print(f"🗺️ GEOLOGY_EXPLORE: Checking data availability at {target}.")
-                    # Simulate success, no keywords
-                    execution_success = True
+                    # This is where the actual action would be performed.
+                    # For now, we simulate success.
+                    execution_success = True 
                     reward = 0.6
                 else:
                     print("⚠️ GEOLOGY_EXPLORE called without a corresponding task.")
@@ -243,12 +247,6 @@ class FlockOfThought:
 
             elif action == "GEOLOGY_LEARN":
                 if self.current_task and action == self.current_task["action"]:
-                    if execution_success:
-                        print(f"✅ Task {self.current_task['id']} ({action}) completed.")
-                    else:
-                        print(f"⚠️ Task {self.current_task['id']} ({action}) FAILED. Moving on.")
-                    self.task_manager.complete_current_task()
-                    self.current_task = None
                     target = self.current_task["target"]
                     try:
                         parts = target.split(',')
