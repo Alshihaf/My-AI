@@ -26,7 +26,7 @@ from datetime import datetime
 
 # --- Local Dependencies ---
 # Each node now contains a population of neural networks
-from ..core.neural_ecosystem import AutonomousANN
+from .neural_ecosystem import AutonomousANN
 
 # --- Visualization Imports (with fallback) ---
 try:
@@ -227,9 +227,10 @@ class SamanticGarden:
     """
     Manages the entire connectome of NeuralNodes, simulating learning, recall, and evolution.
     """
-    def __init__(self, log_dir="Samre/log"):
+    def __init__(self, log_dir="Samre/log", persistence_file=None):
         self.nodes: Dict[str, NeuralNode] = {}
         self.log_dir = log_dir
+        self.persistence_file = persistence_file
         self.global_learning_rate = 0.01 # Modulated by cognitive state (arousal)
         self.config = {
             "ingestion_reinforcement_threshold": 0.9,
@@ -241,6 +242,8 @@ class SamanticGarden:
         }
         if VISUALIZATION_ENABLED and not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
+        if self.persistence_file:
+            self.load_state()
 
     def _calculate_similarity(self, vec1: np.ndarray, vec2: np.ndarray) -> float:
         dot = np.dot(vec1, vec2)
@@ -321,6 +324,7 @@ class SamanticGarden:
 
             # 3. Perform Hebbian updates for both synapses and internal ANNs
             for node in self.nodes.values():
+                total_hebbian_reward = 0.0
                 for synapse in node.synapses:
                     pre_act = pre_activations.get(node.id, 0.0)
                     post_act = post_activations.get(synapse.target.id, 0.0)
@@ -329,10 +333,12 @@ class SamanticGarden:
                         # Update the synapse
                         synapse.hebbian_update(pre_act, post_act, self.global_learning_rate)
                         
-                        # The source node's winning ANN learns from the interaction
-                        # Reward is proportional to the successful connection
-                        hebbian_reward = pre_act * post_act
-                        node.learn_from_interaction(hebbian_reward, self.global_learning_rate)
+                        # Accumulate reward for the source node's winning ANN
+                        total_hebbian_reward += pre_act * post_act
+                
+                # Each node learns once per cycle based on its total synaptic success
+                if total_hebbian_reward > 0:
+                    node.learn_from_interaction(total_hebbian_reward, self.global_learning_rate)
         
         print("⚡️ Spreading Activation complete.")
         return self.get_top_activated_nodes()
@@ -379,15 +385,48 @@ class SamanticGarden:
         """
         Creates a new "interneuron" or abstract concept node to represent the
         relationship between two strongly, bidirectionally connected nodes.
-        (Logic remains similar, but now creates NeuralNodes)
         """
         print("🤔 Searching for new abstractions...")
         created_count = 0
         nodes_list = list(self.nodes.values())
         for i in range(len(nodes_list)):
-            for j in range(i + 1, len(nodes_list)):\
-                # ... (rest of the logic is the same, just ensures new_node is a NeuralNode)
-                pass # For brevity, this logic is unchanged.
+            for j in range(i + 1, len(nodes_list)):
+                node_a = nodes_list[i]
+                node_b = nodes_list[j]
+                
+                # Check for strong bidirectional connection
+                syn_a_b = node_a.get_synapse_to(node_b.id)
+                syn_b_a = node_b.get_synapse_to(node_a.id)
+                
+                if syn_a_b and syn_b_a:
+                    combined_strength = (syn_a_b.strength + syn_b_a.strength) / 2
+                    if combined_strength > self.config["abstraction_cos_threshold"]:
+                        # Create abstract label
+                        abstract_label = f"Abstract({node_a.label} & {node_b.label})"
+                        
+                        # Check if already exists
+                        if any(n.label == abstract_label for n in self.nodes.values()):
+                            continue
+                            
+                        # Create abstract vector (mean)
+                        abstract_vector = (node_a.vector + node_b.vector) / 2
+                        
+                        # Create new NeuralNode
+                        new_node = NeuralNode(
+                            abstract_vector, abstract_label, "AbstractionEngine",
+                            keywords=list(node_a.keywords.union(node_b.keywords)),
+                            population_size=self.config["neural_node_population"]
+                        )
+                        self.nodes[new_node.id] = new_node
+                        
+                        # Connect abstraction to its components
+                        new_node.add_synapse(node_a, 0.8)
+                        new_node.add_synapse(node_b, 0.8)
+                        node_a.add_synapse(new_node, 0.5)
+                        node_b.add_synapse(new_node, 0.5)
+                        
+                        created_count += 1
+                        
         if created_count > 0:
             print(f"✨ Created {created_count} new abstract concepts.")
 
@@ -444,4 +483,64 @@ class SamanticGarden:
             "rata-rata_kekuatan_sinapsis": np.mean([s.strength for n in self.nodes.values() for s in n.synapses if num_synapses > 0]) if num_synapses > 0 else 0,
             "rata-rata_aktivasi": np.mean([n.output_activation for n in self.nodes.values()]) if self.nodes else 0
         }
+
+    def save_state(self):
+        """Saves the garden state to a JSON file."""
+        if not self.persistence_file:
+            return
+        print(f"💾 Saving SamanticGarden to {self.persistence_file}...")
+        data = {
+            "nodes": {}
+        }
+        for node_id, node in self.nodes.items():
+            data["nodes"][node_id] = {
+                "label": node.label,
+                "vector": node.vector.tolist(),
+                "source": node.source,
+                "keywords": list(node.keywords),
+                "importance": node.importance,
+                "synapses": [{"target": s.target.id, "strength": s.strength} for s in node.synapses]
+            }
+        try:
+            import json
+            with open(self.persistence_file, 'w') as f:
+                json.dump(data, f, indent=4)
+            print("✅ SamanticGarden saved.")
+        except Exception as e:
+            print(f"❌ Error saving SamanticGarden: {e}")
+
+    def load_state(self):
+        """Loads the garden state from a JSON file."""
+        if not self.persistence_file or not os.path.exists(self.persistence_file):
+            return
+        print(f"📂 Loading SamanticGarden from {self.persistence_file}...")
+        try:
+            import json
+            with open(self.persistence_file, 'r') as f:
+                data = json.load(f)
+            
+            # First pass: create nodes
+            for node_id, node_data in data.get("nodes", {}).items():
+                node = NeuralNode(
+                    np.array(node_data["vector"]),
+                    node_data["label"],
+                    node_data["source"],
+                    node_data["keywords"],
+                    population_size=self.config["neural_node_population"]
+                )
+                node.id = node_id
+                node.importance = node_data["importance"]
+                self.nodes[node_id] = node
+            
+            # Second pass: create synapses
+            for node_id, node_data in data.get("nodes", {}).items():
+                node = self.nodes[node_id]
+                for syn_data in node_data.get("synapses", []):
+                    target_id = syn_data["target"]
+                    if target_id in self.nodes:
+                        node.add_synapse(self.nodes[target_id], syn_data["strength"])
+            
+            print(f"✅ Loaded {len(self.nodes)} nodes.")
+        except Exception as e:
+            print(f"❌ Error loading SamanticGarden: {e}")
 

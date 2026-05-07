@@ -42,7 +42,9 @@ class Metacognition:
             A string suggesting a new goal, or None.
         """
         # 1. Analyze action failure rates
-        for action, stats in self.action_success_ltm.items():
+        # Use list() to avoid mutation issues, although in Python 3.x it's mostly safe for values
+        for action in list(self.action_success_ltm.keys()):
+            stats = self.action_success_ltm[action]
             if stats["total"] > 5:
                 failure_rate = 1.0 - (stats["success"] / stats["total"])
                 if failure_rate > 0.6:

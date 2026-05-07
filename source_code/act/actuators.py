@@ -18,7 +18,7 @@ class ExploreActuator:
     """Finds new, unread files for the agent to learn from."""
     def __init__(self, file_manager: FileManager):
         self.file_manager = file_manager
-        self.ignore_dirs = {'.git', '__pycache__', '.idea', 'Samre/log'}
+        self.ignore_dirs = {'.git', '__pycache__', '.idea', 'log'}
         self.valid_extensions = {
             '.py', '.md', '.txt', '.json', '.xml', '.html', '.css', '.js'
         }

@@ -440,10 +440,10 @@ class ReasoningEngine:
     # ------------------------------------------------------------
     def _prove_dfs(self, goal: Compound, subst: Substitution, depth: int, node: ProofNode) -> bool:
         # Cek memoization
-        goal_str = str(goal.substitute(subst))
-        subst_repr = repr(subst)
+        goal_ground = goal.substitute(subst)
+        goal_str = str(goal_ground)
         if self.enable_tabling:
-            key = (goal_str, subst_repr)
+            key = goal_str
             if key in self.memo_table:
                 node.success = self.memo_table[key]
                 if not node.success:
@@ -588,6 +588,7 @@ class ReasoningEngine:
     # ------------------------------------------------------------
     def _prove_ids(self, goal: Compound, subst: Substitution, root_node: ProofNode, max_depth: int = 100) -> bool:
         for depth in range(1, max_depth+1):
+            self.memo_table.clear() # Reset memoization between IDS iterations
             if self._prove_dfs_depth_limit(goal, subst, 0, root_node, depth):
                 return True
         return False

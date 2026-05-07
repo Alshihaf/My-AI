@@ -48,7 +48,7 @@ def evaluate_action(
     # Principle 2: Self-preservation. Be cautious with self-modification (rebalanced).
     if action == "EVOLVE":
         # Requires moderate motivation (Dopamine) and not being overly stressed (Cortisol).
-        if neuromodulators.get("Dopamine", 0.5) < 0.5 or neuromodulators.get("Cortisol", 0.1) > 0.5:
+        if neuromodulators.get("Dopamine", 0.5) < 0.5 or neuromodulators.get("Noradrenaline", 0.1) > 0.5:
             print(f"EXECUTIVE: Action '{action}' rejected due to unfavorable neuromodulatory state.")
             return False
         
@@ -80,7 +80,7 @@ def evaluate_plan(plan: Plan, neuromodulators: Dict[str, float]) -> bool:
     print(f"EXECUTIVE: Evaluating plan for goal: '{plan.goal}'")
     # Principle: Don't commit to long, dangerous plans in a bad state.
     if "EVOLVE" in plan.actions:
-        if neuromodulators.get("Cortisol", 0.1) > 0.6:
+        if neuromodulators.get("Noradrenaline", 0.1) > 0.6:
             print("EXECUTIVE: Plan rejected due to high stress and inclusion of EVOLVE.")
             return False
     

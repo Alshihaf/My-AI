@@ -52,7 +52,7 @@ class TextProcessor:
     def _calculate_idf(self, token: str) -> float:
         if self._idf_counts.get(token, 0) == 0 or self._doc_count == 0:
             return 0.0
-        return math.log(self.doc_count / (1 + self._idf_counts[token]))
+        return math.log(self._doc_count / (1 + self._idf_counts[token]))
 
     def text_to_vector(self, text: str) -> Tuple[List[float], Dict[str, float]]:
         """

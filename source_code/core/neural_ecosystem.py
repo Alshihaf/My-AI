@@ -363,3 +363,32 @@ class CognitiveKernel:
             adapt_reward = (1.0 - ann_entropy) * 0.01 + (1.0 / (1.0 + sym_perplexity)) * 0.01
             self.ann.evolve(adapt_reward, data, decision, data)
             yield decision
+class NeuralEcosystem:
+    """
+    NeuralEcosystem acts as a container and manager for various cognitive modules.
+    It provides a centralized way to register, retrieve, and update modules.
+    """
+    def __init__(self):
+        self.modules: Dict[str, Any] = {}
+
+    def register_module(self, name: str, module: Any):
+        """Registers a new module in the ecosystem."""
+        self.modules[name] = module
+        print(f"Registered module: {name}")
+
+    def get_module(self, name: str) -> Any:
+        """Retrieves a module by name."""
+        return self.modules.get(name)
+
+    def update_modules(self, cycle_count: int):
+        """
+        Updates all registered modules that have an update or cycle method.
+        This is called once per cognitive cycle.
+        """
+        for name, module in self.modules.items():
+            # Check for common update methods
+            if hasattr(module, 'update'):
+                module.update(cycle_count)
+            elif hasattr(module, 'cycle') and name != "symbolic_engine": # Avoid double cycle if handled elsewhere
+                module.cycle(cycle_count)
+            # Add more specific update logic if needed for certain module types

@@ -22,7 +22,7 @@ from core.executive import evaluate_action, evaluate_plan
 from core.plan import Plan
 from core.planner import Planner
 from core.metacognition import Metacognition
-from core.samantic_garden import SamanticGarden, KnowledgeNode
+from core.samantic_garden import SamanticGarden, NeuralNode
 from core.neural_ecosystem import NeuralEcosystem
 from core.chain_of_thought import ChainOfThought
 
@@ -55,7 +55,7 @@ class FlockOfThought:
         self.task_manager = TaskManager(task_file=task_file)
         self._load_ltm_action_success()
         self.current_task: Optional[Dict] = None
-        self.short_term_memory: List[KnowledgeNode] = []
+        self.short_term_memory: List[NeuralNode] = []
         self.metacognition = Metacognition(self.ltm_action_success)
         self.planner = Planner()
         self.chain_of_thought = ChainOfThought()
@@ -147,7 +147,20 @@ class FlockOfThought:
                 s, k = self.learning_actuator.execute(f_learn, return_keywords=True)
                 if s: self.needs.satisfy_need("hunger", 0.8); keywords = k; reward, success = 0.9, True
             else: reward, success = -0.3, False
-        # ... other actions
+        elif action in ["GEOLOGY_EXPLORE", "GEOLOGY_LEARN"]:
+            success = self.geology_actuator.execute(action)
+            reward = 0.8 if success else -0.1
+        elif action == "IMAGINE":
+            imagination = self.ecosystem.get_module("imagination")
+            if imagination:
+                # Imagine based on current short term memory
+                context = [n.vector.tolist() for n in self.short_term_memory]
+                if not context: context = [np.random.randn(self.text_processor.vector_dim).tolist()]
+                simulation_result = imagination.simulate(context[0])
+                reward, success = 0.7, True
+                print(f"✨ IMAGINE: Simulated scenario with outcome score {simulation_result.get('outcome', 0):.2f}")
+            else:
+                reward, success = -0.1, False
         else: reward, success = 0.1, True
 
         if success:

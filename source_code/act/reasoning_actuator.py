@@ -8,7 +8,7 @@ SamanticGarden untuk menyimpulkan hubungan baru dan menghasilkan pengetahuan.
 from typing import List, Tuple, Optional
 import networkx as nx
 
-from core.samantic_garden import SamanticGarden, KnowledgeNode
+from core.samantic_garden import SamanticGarden, NeuralNode
 
 class ReasoningActuator:
     """

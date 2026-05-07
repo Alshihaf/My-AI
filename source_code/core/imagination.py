@@ -558,8 +558,9 @@ class SimulationStorage:
         entry = json.dumps(result.to_dict(), ensure_ascii=False) + "\n"
         with self._write_lock:
             try:
-                with gzip.open(self._storage_path, "at", encoding="utf-8") as f:
-                    f.write(entry)
+                # Use "ab" mode for binary append to avoid text-mode issues with gzip
+                with gzip.open(self._storage_path, "ab") as f:
+                    f.write(entry.encode("utf-8"))
             except Exception as exc:
                 logger.error("Gagal menyimpan simulasi: %s", exc)
 
