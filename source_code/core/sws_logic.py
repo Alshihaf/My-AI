@@ -9,7 +9,7 @@ from typing import Dict, List
 
 POSSIBLE_ACTIONS = [
     "EXPLORE", "EVOLVE", "ORGANIZE", "REST", "LEARN", "REASON", 
-    "CONSOLIDATE", "GEOLOGY_EXPLORE", "GEOLOGY_LEARN",
+    "CONSOLIDATE", "GEOLOGY_EXPLORE", "GEOLOGY_LEARN", "IMAGINE",
 ]
 
 def foresight_simulation(
@@ -35,6 +35,11 @@ def foresight_simulation(
     elif action == "REST":
         score += needs.get("fatigue", 0.0) * 2.0
         if all(n < 0.2 for n in needs.values()): score += 0.3
+    elif action == "IMAGINE":
+        score += needs.get("cognitive_load", 0.0) * 0.8
+        score += needs.get("hunger", 0.0) * 0.5
+        score += needs.get("boredom", 0.0) * 0.6
+        score -= needs.get("fatigue", 0.0) * 0.4
 
     # 2. Influence of Short-Term Memory Context
     context_str = " ".join(recalled_concepts_context).lower()

@@ -13,6 +13,7 @@ from collections import deque
 
 # Core Components
 from core.cognitive_core import CognitiveEngine
+from core.imagination import Imagination
 from core.neuromodulator import NeuromodulatorSystem, NeuromodulatoryEvent
 from core.needs import InternalNeeds
 from core.sws_logic import score_all_actions, POSSIBLE_ACTIONS
@@ -31,14 +32,26 @@ from tools.task_manager import TaskManager
 from tools.geology_actuator import GeologyActuator
 
 class FlockOfThought:
-    def __init__(self, symbolic_dim: int = 128):
+    def __init__(self, symbolic_dim: int = 128, use_imagination: bool = True):
         print("🧠 Initializing Flock of Thought (v2.1 - Connectome Enabled & Integral)...")
 
         # === Path otomatis ===
         samre_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         project_root = os.path.dirname(samre_dir)
         log_dir = os.path.join(samre_dir, "log")
-        
+
+        # Imagination Engine
+        self.use_imagination = use_imagination
+        if self.use_imagination:
+            self.imagination = Imagination(
+                storage_path="Samre/log/imagination",
+                max_layers=4,        # 4 lapis cukup untuk reasoning cepat
+                branch_factor=4,     # 4 cabang per node = ringan
+            )
+            print("💭 Imagination Engine initialized.")
+        else:
+            self.imagination = None
+
         # === FileManager (SEKALI SAJA) ===
         self.file_manager = FileManager(base_path=samre_dir)
 
@@ -232,6 +245,35 @@ class FlockOfThought:
                         reward, execution_success = 0.9, True
                     else:
                         reward, execution_success = -0.5, False
+
+            elif action == "IMAGINE":
+                if not self.imagination:
+                    print("💭 IMAGINATION: Engine not available. Skipping.")
+                    reward, execution_success = -0.1, False
+                else:
+                    scenario = "Samre's next best action to satisfy internal needs and complete tasks"
+                    parameters = {
+                        "hunger": self.needs.get_need("hunger"),
+                        "boredom": self.needs.get_need("boredom"),
+                        "fatigue": self.needs.get_need("fatigue"),
+                        "cognitive_load": self.needs.get_need("cognitive_load"),
+                        "garden_nodes": self.samantic_garden.get_garden_state()["jumlah_node"],
+                        "pending_tasks": not self.task_manager.is_project_complete(),
+                    }
+
+                    result = self.imagination.simulate(scenario, parameters, layers=3, persist=False)
+
+                    if result.top_outcomes:
+                        best_outcome = result.top_outcomes[0]
+                        print(f"💭 IMAGINATION: Best path — {best_outcome.get('description', 'N/A')[:100]}")
+                        print(f"   Score: {best_outcome.get('weighted_score', 0):.4f}")
+
+                        # Beri reward proporsional terhadap kualitas skenario terbaik
+                        reward = 0.3 + (best_outcome.get('weighted_score', 0) * 0.5)
+                        execution_success = True
+                    else:
+                        reward = -0.1
+                        execution_success = False
 
             elif action == "GEOLOGY_EXPLORE":
                 if self.current_task and action == self.current_task["action"]:
