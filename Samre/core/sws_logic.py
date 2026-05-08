@@ -170,7 +170,7 @@ class LinearActionValue:
         for a in ("LEARN", "GEOLOGY_LEARN"):
             set_w(a, hunger=1.2, bias=0.0)
         # CONSOLIDATE
-        set_w("CONSOLIDATE", cognitive_load=1.8, bias=0.0)
+        set_w("CONSOLIDATE", cognitive_load=0.6, bias=0.2)
         # REST
         set_w("REST", fatigue=2.0, bias=0.0)
         # IMAGINE

@@ -22,7 +22,7 @@ from .cognitive_core import CognitiveEngine
 from .imagination import Imagination
 from .neuromodulator import NeuromodulatorSystem, NeuromodulatoryEvent
 from .needs import InternalNeeds
-from .sws_logic import score_all_actions, POSSIBLE_ACTIONS
+from .sws_logic import score_all_actions, POSSIBLE_ACTIONS, update_action_value
 from .executive import evaluate_action, evaluate_plan
 from .plan import Plan
 from .planner import Planner
@@ -98,6 +98,10 @@ class FlockOfThought:
         else:
             self.ltm_action_success = {a: {"success": 0, "total": 0} for a in POSSIBLE_ACTIONS}
 
+        # Pastikan ada slot untuk CRITICAL_FAILURE
+        if "CRITICAL_FAILURE" not in self.ltm_action_success:
+            self.ltm_action_success["CRITICAL_FAILURE"] = {"success": 0, "total": 0}
+
     def save_state(self):
         print("💾 Saving agent state...")
         self.samantic_garden.save_state()
@@ -164,7 +168,6 @@ class FlockOfThought:
         if self.current_plan and self.current_plan.is_complete():
             self.metacognition.record_plan_outcome(self.current_plan, True)
             self.current_plan = None
-        self.needs.update_needs()
         stm_labels = [n.label for n in self.short_term_memory]
         ltm_rates = {
             a: (s["success"] / s["total"] if s["total"] > 0 else 0.5)
@@ -221,12 +224,19 @@ class FlockOfThought:
         elif action == "IMAGINE":
             imagination = self.ecosystem.get_module("imagination")
             if imagination:
-                context = [n.vector.tolist() for n in self.short_term_memory]
-                if not context:
-                    context = [np.random.randn(self.text_processor.vector_dim).tolist()]
-                simulation_result = imagination.simulate(context[0])
-                reward, success = 0.7, True
-                print(f"✨ IMAGINE: Simulated scenario with outcome score {simulation_result.get('outcome', 0):.2f}")
+                # Bangun skenario dari konteks STM
+                if self.short_term_memory:
+                    concepts = [n.label for n in self.short_term_memory[:3]]
+                    scenario = f"Exploring the connections between: {', '.join(concepts)}"
+                else:
+                    scenario = "Random exploration of the latent space"
+                try:
+                    simulation_result = imagination.simulate(scenario)
+                    reward, success = 0.7, True
+                    print(f"✨ IMAGINE: Simulated '{scenario}' with avg risk {simulation_result.risk_assessment.get('rata_rata', 0):.2f}")
+                except Exception as e:
+                    print(f"⚠️ IMAGINE gagal: {e}")
+                    reward, success = -0.2, False
             else:
                 reward, success = -0.1, False
         elif action == "CONTEMPLATE":
@@ -260,28 +270,34 @@ class FlockOfThought:
     # CONTEMPLATE: Deep reflective reasoning
     # -----------------------------------------------------------------
     def _contemplate(self) -> Tuple[float, bool, List[str]]:
-        """
-        Deep reflection using the reasoning engine, file manager, and imagination.
-        1. Load symbolic facts from strong synapses in the SamanticGarden.
-        2. Pick two highly activated concepts from short‑term memory.
-        3. Use the reasoning engine to prove if a transitive relationship exists.
-        4. Simulate the outcome with Imagination.
-        """
+        """Deep reflective reasoning (dengan sanitasi label & error handling)."""
         print("🧘 CONTEMPLATING: Starting deep reflective reasoning...")
-        # Reset mesin penalaran setiap kali untuk kondisi bersih
+
+        # --- Fungsi bantu untuk menghasilkan simbol yang aman bagi parser ---
+        def _sanitize_term(raw: str) -> str:
+            """Mengubah string menjadi simbol alfanumerik + underscore."""
+            import re
+            # Ganti satu atau lebih karakter non‑alfanumerik menjadi satu underscore
+            sanitized = re.sub(r'\W+', '_', raw)
+            # Hapus underscore di awal/akhir
+            sanitized = sanitized.strip('_')
+            # Jangan sampai kosong
+            return sanitized if sanitized else "unknown"
+
+        # Reset mesin penalaran
         self.reasoning_engine = ReasoningEngine(search_strategy="depth_first")
+
         # 1. Bangun basis pengetahuan simbolik dari sinapsis kuat
         for node in self.samantic_garden.nodes.values():
             for syn in node.synapses:
                 if syn.strength > 0.7:
-                    # Hindari karakter yang tidak valid dalam term
-                    src = node.label.replace(' ', '_').replace("'", "")
-                    dst = syn.target.label.replace(' ', '_').replace("'", "")
+                    src = _sanitize_term(node.label)
+                    dst = _sanitize_term(syn.target.label)
                     fact_str = f"related({src}, {dst})"
                     try:
                         self.reasoning_engine.add_fact(fact_str)
-                    except Exception:
-                        continue
+                    except Exception as e:
+                        print(f"    ⚠️ Gagal menambah fakta: {fact_str} -> {e}")
 
         # 2. Pilih dua konsep yang sedang aktif di STM
         if len(self.short_term_memory) >= 2:
@@ -294,13 +310,18 @@ class FlockOfThought:
                 print("    ⚠️ Not enough concepts to contemplate.")
                 return -0.2, False, []
 
-        label_a = node_a.label.replace(' ', '_')
-        label_b = node_b.label.replace(' ', '_')
+        label_a = _sanitize_term(node_a.label)
+        label_b = _sanitize_term(node_b.label)
         query = f"related({label_a}, {label_b})"
 
-        # 3. Buktikan dengan backward chaining
+        # 3. Buktikan dengan backward chaining (dengan try‑except)
         print(f"    🔍 Query: {query}")
-        proven = self.reasoning_engine.reason(query)
+        try:
+            proven = self.reasoning_engine.reason(query)
+        except Exception as e:
+            print(f"    ❌ Gagal mem‑parse query: {e}")
+            proven = False
+
         if proven:
             print(f"    ✅ Proved: {label_a} is related to {label_b}")
             # Perkuat koneksi di garden
@@ -313,19 +334,23 @@ class FlockOfThought:
             reward = 0.9
         else:
             print(f"    ❌ Could not prove relation.")
-            reward = 0.2  # reward kecil karena upaya berpikir
+            reward = 0.2
 
-        # 4. Simulasi dampak dengan Imagination
+        # 4. Simulasi dampak dengan Imagination (jika tersedia)
         imagination = self.ecosystem.get_module("imagination")
         if imagination:
-            scenario = f"If {node_a.label} and {node_b.label} are directly connected"
-            sim_result = imagination.simulate(scenario, parameters={
-                "node_a": node_a.label,
-                "node_b": node_b.label
-            })
-            avg_score = sim_result.risk_assessment.get("rata_rata", 0)
-            reward += 0.2 if avg_score > 0 else -0.1
-            print(f"    🌌 Imagination: {sim_result.summary()[:120]}...")
+            scenario_text = f"If {node_a.label} and {node_b.label} are directly connected"
+            try:
+                sim_result = imagination.simulate(
+                    scenario_text,
+                    parameters={"node_a": node_a.label, "node_b": node_b.label},
+                )
+                avg_score = sim_result.risk_assessment.get("rata_rata", 0)
+                reward += 0.2 if avg_score > 0 else -0.1
+                print(f"    🌌 Imagination: {sim_result.summary()[:120]}...")
+            except Exception as e:
+                print(f"    ⚠️ Imagination gagal: {e}")
+                reward -= 0.1
 
         keywords = list(node_a.keywords.union(node_b.keywords))
         return reward, True, keywords
@@ -334,7 +359,10 @@ class FlockOfThought:
     # Learning & Neuromodulation update
     # -----------------------------------------------------------------
     def update_learning_systems(self, action: str, success: bool, reward: float):
-        """Perbarui statistik LTM, neuromodulator, dan laju belajar."""
+
+        if action not in self.ltm_action_success:
+            self.ltm_action_success[action] = {"success": 0, "total": 0}
+
         self.ltm_action_success[action]["total"] += 1
         if success:
             self.ltm_action_success[action]["success"] += 1
@@ -346,6 +374,22 @@ class FlockOfThought:
         levels = neuromodulators.get_all_levels()
         arousal = (levels["Dopamine"] + levels["Noradrenaline"]) / 2.0
         self.samantic_garden.global_learning_rate = 0.01 * (1 + 1.5 * arousal)
+
+        ltm_rates = {
+            a: (s["success"] / s["total"] if s["total"] > 0 else 0.5)
+            for a, s in self.ltm_action_success.items()
+        }
+        update_action_value(
+            action=action,
+            needs=self.needs.get_all_needs(),
+            neuromodulators=self.ecosystem.get_module("neuromodulators").get_all_levels(),
+            recalled_concepts_context=[n.label for n in self.short_term_memory],
+            ltm_success_rates={
+                a: (s["success"] / s["total"] if s["total"] > 0 else 0.5)
+                for a, s in self.ltm_action_success.items()
+            },
+            reward=reward
+        )
 
     # -----------------------------------------------------------------
     # Main cognitive cycle
@@ -359,7 +403,6 @@ class FlockOfThought:
             self.needs.update_needs()
             if self.task_manager.is_project_complete():
                 print("🎉 Project complete!")
-                return
 
             print(self.task_manager.get_project_status())
 

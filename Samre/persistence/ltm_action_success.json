@@ -1,39 +1,39 @@
 {
     "EXPLORE": {
-        "success": 0,
-        "total": 0
+        "success": 20,
+        "total": 20
     },
     "EVOLVE": {
         "success": 0,
         "total": 0
     },
     "ORGANIZE": {
-        "success": 0,
-        "total": 0
+        "success": 2,
+        "total": 2
     },
     "REST": {
-        "success": 0,
-        "total": 0
+        "success": 9,
+        "total": 9
     },
     "LEARN": {
-        "success": 0,
-        "total": 13
+        "success": 19,
+        "total": 23
     },
     "REASON": {
-        "success": 0,
-        "total": 0
+        "success": 2,
+        "total": 2
     },
     "CONSOLIDATE": {
-        "success": 0,
-        "total": 0
+        "success": 19,
+        "total": 19
     },
     "GEOLOGY_EXPLORE": {
         "success": 0,
-        "total": 0
+        "total": 3
     },
     "GEOLOGY_LEARN": {
         "success": 0,
-        "total": 0
+        "total": 2
     },
     "IMAGINE": {
         "success": 0,
@@ -42,5 +42,9 @@
     "CONTEMPLATE": {
         "success": 0,
         "total": 0
+    },
+    "CRITICAL_FAILURE": {
+        "success": 0,
+        "total": 1
     }
 }

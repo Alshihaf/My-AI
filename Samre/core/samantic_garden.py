@@ -499,7 +499,10 @@ class SamanticGarden:
                         # Unique label using truncated id hashes
                         tail_a = node_a.id[-6:]
                         tail_b = node_b.id[-6:]
-                        abstract_label = f"Abs({node_a.label[:8]}&{node_b.label[:8]})_{tail_a}_{tail_b}"
+                        # Nama singkat yang aman
+                        short_a = node_a.label[:8].replace(' ', '_')
+                        short_b = node_b.label[:8].replace(' ', '_')
+                        abstract_label = f"Abs_{short_a}_{short_b}_{tail_a}_{tail_b}"
                         # Check for duplicate
                         if any(n.label == abstract_label for n in self.nodes.values()):
                             continue
