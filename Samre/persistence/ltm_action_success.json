@@ -1,0 +1,46 @@
+{
+    "EXPLORE": {
+        "success": 0,
+        "total": 0
+    },
+    "EVOLVE": {
+        "success": 0,
+        "total": 0
+    },
+    "ORGANIZE": {
+        "success": 0,
+        "total": 0
+    },
+    "REST": {
+        "success": 0,
+        "total": 0
+    },
+    "LEARN": {
+        "success": 0,
+        "total": 13
+    },
+    "REASON": {
+        "success": 0,
+        "total": 0
+    },
+    "CONSOLIDATE": {
+        "success": 0,
+        "total": 0
+    },
+    "GEOLOGY_EXPLORE": {
+        "success": 0,
+        "total": 0
+    },
+    "GEOLOGY_LEARN": {
+        "success": 0,
+        "total": 0
+    },
+    "IMAGINE": {
+        "success": 0,
+        "total": 0
+    },
+    "CONTEMPLATE": {
+        "success": 0,
+        "total": 0
+    }
+}

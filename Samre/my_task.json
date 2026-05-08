@@ -1,0 +1,22 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "action": "LEARN",
+      "target": "Samre/data/geology_basics.md",
+      "description": "Pelajari konsep dasar geologi."
+    },
+    {
+      "id": 2,
+      "action": "GEOLOGY_EXPLORE",
+      "target": "lat:36.0,lng:-112.0", 
+      "description": "Jelajahi data geologi Arizona (sekitar Tube City) via API Macrostrat."
+    },
+    {
+      "id": 3,
+      "action": "GEOLOGY_LEARN",
+      "target": "lat:36.0,lng:-112.0",
+      "description": "Ambil 10 unit batuan dari API dan tanam di SamanticGarden."
+    }
+  ]
+}
