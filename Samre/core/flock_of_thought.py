@@ -237,7 +237,24 @@ class FlockOfThought:
     # -----------------------------------------------------------------
     def _bootstrap_initial_knowledge(self):
         print("--- Bootstrapping ---")
-        source_files = ["core/flock_of_thought.py", "core/cognitive_core.py"]
+        source_files = [
+            "core/flock_of_thought.py",
+            "core/cognitive_core.py",
+            "core/samantic_garden.py",
+            "core/neural_ecosystem.py",
+            "core/imagination.py",
+            "core/sws_logic.py",
+            "core/executive.py",
+            "core/planner.py",
+            "core/metacognition.py",
+            "core/needs.py",
+            "core/neuromodulator.py",
+            "core/plan.py",
+            "data/test_data (1).csv"
+            "data/train_data (1).csv"
+            "data/train-v1.1.json"
+            "data/SP500_Stock_Data.csv"
+        ]
         corpus = []
         corpus_data = {}
         for file_path in source_files:
@@ -250,6 +267,12 @@ class FlockOfThought:
         for file_path, content in corpus_data.items():
             self.process_and_store(content, file_path)  # return value ignored here
         self.samantic_garden.consolidate_memories()
+        
+        # Isi STM dengan node bootstrap agar ada konteks awal
+        if self.samantic_garden.nodes:
+            self.short_term_memory = list(self.samantic_garden.nodes.values())[:5]
+            print(f"🧠 Short‑term memory initialized with {len(self.short_term_memory)} nodes.")
+
         print("--- Bootstrap Complete ---")
 
     # -----------------------------------------------------------------
@@ -303,6 +326,10 @@ class FlockOfThought:
         return self.evaluate_and_select_action(action_scores)
 
     def evaluate_and_select_action(self, action_scores: Dict[str, float]) -> str:
+        if self.cycle_count > 8 and not self.explored_paths:
+            print("🔍 FORCING EXPLORE: No file discovered yet.")
+            return "EXPLORE"
+
         sorted_actions = sorted(action_scores.items(), key=lambda item: item[1], reverse=True)
         neuro_levels = self.ecosystem.get_module("neuromodulators").get_all_levels()
         for action, score in sorted_actions:
