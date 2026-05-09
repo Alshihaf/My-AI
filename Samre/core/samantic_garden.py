@@ -1,30 +1,3 @@
-"""
-Samantic Garden - A Connectome-Inspired Knowledge Graph (v4.0 - Reinforcement Learning Backbone)
-
-This module implements a dynamic knowledge graph where each node is an active,
-learning agent. The entire structure is rebuilt around Reinforcement Learning:
-- NeuralNode: Now a self-contained RL agent using multi-armed bandit selection
-  and continuous policy gradient (REINFORCE). Competition among internal
-  "sub-minds" (arms) is still present, but driven by stochastic policy and
-  reward maximisation rather than simple prediction error.
-- Synapse: Uses a Hebbian plasticity rule with an eligibility trace and can be
-  interpreted as a TD(λ)-like learning mechanism, modulated by node-derived
-  reward.
-- SamanticGarden: Orchestrates spreading activation, consolidation, and
-  abstraction, all benefiting from the new adaptive node behaviours.
-
-Key improvements over v3.0:
-  1. Eliminates dependency on AutonomousANN (and its EWC bugs).
-  2. Each node learns online via REINFORCE; no brittle winner-takes-all based
-     on prediction error.
-  3. Multi-armed bandit selection allows each concept to maintain multiple
-     activation strategies, exploring different contexts.
-  4. Clear separation of state representation, action selection, and reward
-     processing – all standard RL components.
-  5. Lighter memory footprint: no full neural networks inside each node, only
-     small linear weights per arm.
-"""
-
 import time
 import numpy as np
 import random
@@ -309,8 +282,8 @@ class SamanticGarden:
         self.persistence_file = persistence_file
         self.global_learning_rate = 0.01  # Modulated externally (e.g. by arousal)
         self.config = {
-            "ingestion_reinforcement_threshold": 0.9,
-            "connection_similarity_threshold": 0.75,
+            "ingestion_reinforcement_threshold": 0.5,
+            "connection_similarity_threshold": 0.5,
             "consolidation_pruning_threshold": 0.02,
             "consolidation_decay_factor": 0.005,
             "abstraction_cos_threshold": 0.8,

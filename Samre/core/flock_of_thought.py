@@ -250,10 +250,10 @@ class FlockOfThought:
             "core/needs.py",
             "core/neuromodulator.py",
             "core/plan.py",
-            "data/test_data (1).csv"
-            "data/train_data (1).csv"
-            "data/train-v1.1.json"
-            "data/SP500_Stock_Data.csv"
+            "data/test_data (1).csv",
+            "data/train_data (1).csv",
+            "data/train-v1.1.json",
+            "data/SP500_Stock_Data.csv",
         ]
         corpus = []
         corpus_data = {}
