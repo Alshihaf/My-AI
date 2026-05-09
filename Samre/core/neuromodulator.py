@@ -166,6 +166,45 @@ class NeuromodulatorSystem:
         for mod in [self.dopamine, self.serotonin, self.noradrenaline, self.acetylcholine]:
             mod.reset()
 
+    def apply_physical_condition(self, needs: Dict[str, float]):
+        """
+        Menyesuaikan level neuromodulator berdasarkan kondisi fisik (needs) saat ini.
+        Panggil setiap siklus untuk menciptakan efek domino dinamis.
+        """
+        # Ekstrak nilai kebutuhan
+        fatigue = needs.get("fatigue", 0.0)
+        cognitive_load = needs.get("cognitive_load", 0.0)
+        hunger = needs.get("hunger", 0.0)
+        boredom = needs.get("boredom", 0.0)
+
+        # Hitung delta untuk setiap neuromodulator berdasarkan kondisi
+        # Faktor pengali lembut (0.02) agar perubahan tidak drastis per siklus
+        delta_dopamine = (
+            -0.02 * fatigue           # lelah → lesu
+            + 0.02 * hunger           # lapar data → semangat mencari
+           + 0.02 * boredom          # bosan → ingin eksplorasi
+        )
+        delta_serotonin = (
+            -0.02 * fatigue           # lelah → mood turun
+           - 0.01 * hunger           # lapar → gelisah
+           - 0.01 * boredom          # bosan → sedikit impulsif
+        )
+        delta_noradrenaline = (
+             0.02 * fatigue            # lelah → tubuh stres
+           + 0.03 * cognitive_load   # beban tinggi → fokus tegang
+        )
+        delta_acetylcholine = (
+             0.02 * cognitive_load     # beban tinggi → perlu encoding
+        )
+
+        # Terapkan menggunakan external_input (akumulasi bertahap)
+        self.update_all(external_inputs={
+            "Dopamine": delta_dopamine,
+            "Serotonin": delta_serotonin,
+            "Noradrenaline": delta_noradrenaline,
+            "Acetylcholine": delta_acetylcholine,
+        })
+
 
 # =============================================================================
 #  OPTIONAL: Context-dependent neuromodulatory event handler (no output)

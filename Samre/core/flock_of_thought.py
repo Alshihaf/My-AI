@@ -44,6 +44,11 @@ class FlockOfThought:
     def __init__(self, symbolic_dim: int = 128, use_imagination: bool = True):
         print("🧠 Initializing Flock of Thought (v2.5.0 - Contemplative Reasoning)...")
         samre_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+       
+        # Buat direktori data jika belum ada
+        self.data_dir = os.path.join(samre_dir, "data")
+        os.makedirs(self.data_dir, exist_ok=True)
+
         self.log_dir = os.path.join(samre_dir, "log")
         self.persistence_dir = os.path.join(samre_dir, "persistence")
         if not os.path.exists(self.persistence_dir):
@@ -112,6 +117,120 @@ class FlockOfThought:
         except IOError as e:
             print(f"❌ Error saving LTM: {e}")
         print("✅ Agent state saving complete.")
+        
+
+    # -----------------------------------------------------------------
+    # Outo detect file format
+    # -----------------------------------------------------------------
+    def _prepare_gourmet_data(self, file_path: str, content: str) -> str:
+        """
+        Mengubah isi file data mentah menjadi teks naratif yang kaya konteks
+        untuk dicerna oleh SamanticGarden.
+        """
+        ext = os.path.splitext(file_path)[1].lower()
+        enhanced_text = content  # Default: teks asli
+
+        try:
+            if ext == '.csv':
+                import csv, io
+                reader = csv.DictReader(io.StringIO(content))
+                rows = list(reader)
+                if not rows:
+                    return content
+
+                # Ambil header untuk konteks
+                headers = reader.fieldnames
+                # Batasi ke 50 baris pertama untuk menjaga performa
+                sample_rows = rows[:50]
+
+                descriptions = []
+                descriptions.append(f"Dataset file: '{os.path.basename(file_path)}'.")
+                descriptions.append(f"Columns: {', '.join(headers)}.")
+                descriptions.append("Sample data:")
+
+                for i, row in enumerate(sample_rows):
+                    # Buat deskripsi per baris sebagai kalimat
+                    parts = []
+                    for key, val in row.items():
+                        if val and val.strip():
+                            parts.append(f"{key} is {val}")
+                    if parts:
+                        descriptions.append(f"Row {i+1}: {'. '.join(parts)}.")
+
+                enhanced_text = " ".join(descriptions)
+
+            elif ext == '.json':
+                import json
+                data = json.loads(content)
+                # Jika JSON berupa list of objects
+                if isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
+                    headers = list(data[0].keys())
+                    sample = data[:50]
+                    descriptions = []
+                    descriptions.append(f"JSON dataset: '{os.path.basename(file_path)}'.")
+                    descriptions.append(f"Contains {len(data)} records with keys: {headers}.")
+                    descriptions.append("Sample entries:")
+                    for i, item in enumerate(sample):
+                        parts = [f"{k} = {v}" for k, v in item.items()]
+                        descriptions.append(f"Entry {i+1}: {', '.join(parts)}.")
+                    enhanced_text = " ".join(descriptions)
+
+            # Format lain (txt, md, dll) biarkan langsung sebagai teks mentah
+        except Exception as e:
+            print(f"⚠️ Gagal menyempurnakan data dari {file_path}: {e}")
+
+        return enhanced_text
+
+    # -----------------------------------------------------------------
+    # Learn from the data/ directory
+    # -----------------------------------------------------------------
+    def _ingest_data_files(self):
+        """
+        Memindai direktori data/ dan memproses file baru yang belum pernah dipelajari.
+        File dengan ekstensi yang didukung akan diubah menjadi pengetahuan di SamanticGarden.
+        """
+        # Daftar ekstensi yang didukung (sama seperti ExploreActuator)
+        valid_extensions = {'.py', '.md', '.txt', '.json', '.xml', '.html', '.css', '.js', '.csv', '.log'}
+
+        # Cek isi direktori data/
+        result = self.file_manager.list_files("data")
+        if "error" in result:
+            # Direktori mungkin kosong atau tidak ada; tidak perlu error
+            return
+
+        files = result.get("files", [])
+        if not files:
+            return
+
+        new_files_processed = 0
+        for filename in files:
+            # Dapatkan path relatif terhadap base_path
+            relative_path = f"data/{filename}"
+            # Cek apakah sudah pernah diproses
+            if relative_path in self.explored_paths:
+                continue
+
+            # Filter ekstensi
+            ext = os.path.splitext(filename)[1].lower()
+            if ext not in valid_extensions:
+                continue
+
+            # Baca dan proses
+            read_result = self.file_manager.read_file(relative_path)
+            if "content" in read_result:
+                content = read_result["content"]
+                try:
+                    keywords = self.process_and_store(content, relative_path)
+                    self.explored_paths.add(relative_path)
+                    new_files_processed += 1
+                    print(f"📂 DATA INGEST: Learned from '{relative_path}' ({len(keywords)} keywords)")
+                except Exception as e:
+                    print(f"⚠️ Gagal memproses '{relative_path}': {e}")
+
+        if new_files_processed > 0:
+            print(f"✅ Data ingestion: {new_files_processed} new file(s) processed.")
+            # Beri sedikit kepuasan agar agen tidak merasa kelaparan
+            self.needs.satisfy_need("hunger", 0.3 * new_files_processed)
 
     # -----------------------------------------------------------------
     # Bootstrapping
@@ -401,6 +520,12 @@ class FlockOfThought:
         print(f"🔄 Cycle: {self.cycle_count}")
         try:
             self.needs.update_needs()
+
+            # --- Adaptasi fisik → neuromodulators (efek domino)
+            neuromodulators = self.ecosystem.get_module("neuromodulators")
+            neuromodulators.apply_physical_condition(self.needs.get_all_needs())
+            
+            self._ingest_data_files()
             if self.task_manager.is_project_complete():
                 print("🎉 Project complete!")
 
