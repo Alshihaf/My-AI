@@ -1,5 +1,5 @@
 numpy
 networkx
 scipy
-request
+requests
 matplotlib
