@@ -1,1 +1,7 @@
-persistence/
+log/*
+data/*
+persistence/*
+
+!log/.gitkeep
+!data/.gitkeep
+!persistence/.gitkeep
