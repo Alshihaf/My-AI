@@ -327,3 +327,23 @@ def update_action_value(
 def get_learner() -> LinearActionValue:
     """Access the underlying learner for persistence or inspection."""
     return _learner
+
+def save(self, filepath: str) -> None:
+    arrays = {a: self.weights[a] for a in POSSIBLE_ACTIONS}
+    np.savez(filepath, **arrays)
+
+def load(self, filepath: str) -> bool:
+    try:
+        with np.load(filepath) as data:
+            for a in POSSIBLE_ACTIONS:
+                if a in data:
+                    self.weights[a] = data[a]
+        return True
+    except Exception:
+        return False
+
+def save_learner(filepath: str):
+    _learner.save(filepath)
+
+def load_learner(filepath: str):
+    return _learner.load(filepath)

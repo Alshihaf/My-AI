@@ -9,7 +9,7 @@ Now includes a confidence threshold and rebalanced EVOLVE criteria.
 """
 
 import random
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from core.plan import Plan
 
@@ -19,50 +19,48 @@ def evaluate_action(
     action: str,
     score: float,
     needs: Dict[str, float],
-    neuromodulators: Dict[str, float]
+    neuromodulators: Dict[str, float],
+    stm_labels: List[str] = None,
+    ltm_rates: Dict[str, Dict[str, int]] = None
 ) -> bool:
-    """
-    Evaluates whether to approve or reject a selected action.
-
-    Args:
-        action: The action selected by the scoring system.
-        score: The score given to the action (confidence level).
-        needs: Current internal needs.
-        neuromodulators: Current neuromodulator levels (uses Capitalized keys).
-
-    Returns:
-        True if the action is approved, False if rejected.
-    """
-    # Principle 0: Confidence Check. Don't act on very low-scoring impulses.
-    # REST is an exception, as it's a fallback action.
     if action != "REST" and score < CONFIDENCE_THRESHOLD:
         print(f"EXECUTIVE: Action '{action}' rejected due to low confidence score ({score:.2f}).")
         return False
 
-    # Principle 1: Conserve energy. If fatigued, be hesitant.
+    # Hindari ulangi aksi yang baru saja gagal berkali-kali
+    if ltm_rates and action in ltm_rates:
+        stats = ltm_rates[action]
+        if stats["total"] >= 5:
+            fail_rate = 1.0 - (stats["success"] / stats["total"])
+            if fail_rate > 0.7:
+                print(f"EXECUTIVE: Action '{action}' rejected because of high historical failure rate ({fail_rate:.2f}).")
+                return False
+
+    # Konteks STM: jika tidak ada sinyal relevan, jangan paksakan aksi khusus
+    if action in ["GEOLOGY_EXPLORE", "GEOLOGY_LEARN"]:
+        context = " ".join(stm_labels or []).lower()
+        if not any(w in context for w in ("geology", "macrostrat", "rock", "formation")):
+            print(f"EXECUTIVE: Action '{action}' rejected because geology context not present in STM.")
+            return False
+
+    # ... aturan fatigue, dll seperti sebelumnya ...
     if needs.get("fatigue", 0.0) > 0.8:
         if action not in ["REST"] and random.random() > 0.3:
             print(f"EXECUTIVE: Action '{action}' rejected due to high fatigue.")
             return False
 
-    # Principle 2: Self-preservation. Be cautious with self-modification (rebalanced).
     if action == "EVOLVE":
-        # Requires moderate motivation (Dopamine) and not being overly stressed (Cortisol).
         if neuromodulators.get("Dopamine", 0.5) < 0.5 or neuromodulators.get("Noradrenaline", 0.1) > 0.5:
             print(f"EXECUTIVE: Action '{action}' rejected due to unfavorable neuromodulatory state.")
             return False
-        
-        # Probabilistic gate adjusted to a 50% chance of approval.
         if random.random() > 0.5:
             print(f"EXECUTIVE: Action '{action}' rejected by probabilistic safety gate.")
             return False
 
-    # Principle 3: Avoid pointless loops. If boredom is high, don't rest, UNLESS fatigue is critical.
     if action == "REST" and needs.get("boredom", 0.0) > 0.7 and needs.get("fatigue", 0.0) < 0.8:
-         print(f"EXECUTIVE: Action '{action}' rejected due to high boredom (and non-critical fatigue).")
-         return False
+        print(f"EXECUTIVE: Action '{action}' rejected due to high boredom.")
+        return False
 
-    # Default approval
     print(f"EXECUTIVE: Action '{action}' approved.")
     return True
 

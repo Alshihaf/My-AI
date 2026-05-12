@@ -14,44 +14,41 @@ class Planner:
     This is an expanded rule-based planner.
     """
     def create_plan(self, goal: str) -> Optional[Plan]:
-        """
-        Creates a plan based on a high-level goal, now with more comprehensive rules.
-        """
         print(f"📋 PLANNER: Received new goal: '{goal}'")
-        goal_lower = goal.lower()
+        g = goal.lower()
 
-        # Rule for general knowledge acquisition
-        if "understand" in goal_lower or "learn about" in goal_lower:
-            return Plan(goal=goal, actions=["EXPLORE", "LEARN", "REASON", "CONSOLIDATE"])
+        # Deteksi domain
+        geology_keywords = ["geology", "rock", "mineral", "formation", "sedimentary", "volcanic", "macrostrat"]
+        code_keywords = ["code", "refactor", "bug", "fix", "implement", "feature", "debug"]
+        data_keywords = ["data", "csv", "json", "dataset", "clean", "preprocess", "analyze"]
+        cognitive_keywords = ["planning", "improve planning", "reduce failure", "optimize", "performance"]
 
-        # Rule for improving a specific, underperforming action
-        if "improve reliability" in goal_lower:
-            if "explore" in goal_lower:
+        if any(w in g for w in geology_keywords):
+            return Plan(goal=goal, actions=["GEOLOGY_EXPLORE", "GEOLOGY_LEARN", "CONSOLIDATE"])
+        if any(w in g for w in code_keywords):
+            return Plan(goal=goal, actions=["EXPLORE", "LEARN", "REASON", "EVOLVE", "CONSOLIDATE"])
+        if any(w in g for w in data_keywords):
+            return Plan(goal=goal, actions=["EXPLORE", "LEARN", "REASON", "ORGANIZE"])
+        if any(w in g for w in cognitive_keywords):
+            return Plan(goal=goal, actions=["LEARN", "REASON", "CONSOLIDATE", "CONTEMPLATE"])
+
+        if "improve reliability" in g:
+            if "explore" in g:
                 return Plan(goal=goal, actions=["LEARN", "REASON", "EXPLORE", "CONSOLIDATE"])
-            if "learn" in goal_lower:
+            if "learn" in g:
                 return Plan(goal=goal, actions=["EXPLORE", "LEARN"])
-            if "reason" in goal_lower:
-                 return Plan(goal=goal, actions=["LEARN", "CONSOLIDATE", "REASON"])
-            return Plan(goal=goal, actions=["EXPLORE", "LEARN", "CONSOLIDATE"]) # General improvement
+            if "reason" in g:
+                return Plan(goal=goal, actions=["LEARN", "CONSOLIDATE", "REASON"])
+            return Plan(goal=goal, actions=["EXPLORE", "LEARN", "CONSOLIDATE"])
 
-        # Rule for code or self-improvement tasks
-        if "refactor" in goal_lower or "evolve" in goal_lower or "organize" in goal_lower:
+        if "refactor" in g or "evolve" in g or "organize" in g:
             return Plan(goal=goal, actions=["LEARN", "REASON", "EVOLVE", "CONSOLIDATE"])
-        
-        # Rule for geological tasks
-        if "geology" in goal_lower:
-            if "find data" in goal_lower or "explore area" in goal_lower:
-                return Plan(goal=goal, actions=["GEOLOGY_EXPLORE", "GEOLOGY_LEARN"])
-            if "analyze" in goal_lower or "predict" in goal_lower:
-                return Plan(goal=goal, actions=["GEOLOGY_LEARN", "REASON", "ORGANIZE"])
 
-        # Rule for when boredom is high - seek novelty
-        if "boredom" in goal_lower and "high" in goal_lower:
+        if "boredom" in g and "high" in g:
             return Plan(goal=goal, actions=["EXPLORE", "IMAGINE"])
-        
-        print(f"🤔 PLANNER: No specific rule found for goal: '{goal}'. Creating a default plan.")
-        # Default plan: Learn, Reason, Consolidate
-        return Plan(goal=goal, actions=["LEARN", "REASON", "CONSOLIDATE"])
+
+        print(f"🤔 PLANNER: No specific rule, creating default learning plan.")
+        return Plan(goal=goal, actions=["EXPLORE", "LEARN", "REASON", "CONSOLIDATE"])
 
     def revise_plan(self, failed_plan: Plan, error: str) -> Optional[Plan]:
         """

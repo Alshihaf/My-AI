@@ -1,6 +1,10 @@
-log/*
+act/__pycache__
+core/__pycache__
 data/*
+log/*
 persistence/*
+tools/__pycache__
+goals.json
 
 !log/.gitkeep
 !data/.gitkeep

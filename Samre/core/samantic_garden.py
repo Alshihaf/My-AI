@@ -114,6 +114,26 @@ class NeuralNode:
         self.last_mean: float = 0.0
         self.last_state: Optional[np.ndarray] = None
 
+    def get_rl_state(self) -> dict:
+        return {
+            "W": self.W.tolist(),
+            "b": self.b.tolist(),
+            "preferences": self.preferences.tolist(),
+            "baseline": self.baseline,
+            "sigma": self.sigma,
+            "lr_w": self.lr_w,
+            "lr_pref": self.lr_pref,
+        }
+
+    def sat_rl_state(self, state: dict):
+        self.W = np.array(state["W"], dtype=np.float32)
+        self.b = np.array(state["b"], dtype=np.float32)
+        self.preferences = np.array(state["preferences"], dtype=np.float32)
+        self.baseline = state["baseline"]
+        self.sigma = state["sigma"]
+        self.lr_w = state["lr_w"]
+        self.lr_pref = state["lr_pref"]
+
     # -------------------------------------------------------------------------
     #  State construction
     # -------------------------------------------------------------------------
@@ -282,8 +302,8 @@ class SamanticGarden:
         self.persistence_file = persistence_file
         self.global_learning_rate = 0.01  # Modulated externally (e.g. by arousal)
         self.config = {
-            "ingestion_reinforcement_threshold": 0.5,
-            "connection_similarity_threshold": 0.5,
+            "ingestion_reinforcement_threshold": 0.85,
+            "connection_similarity_threshold": 0.85,
             "consolidation_pruning_threshold": 0.02,
             "consolidation_decay_factor": 0.005,
             "abstraction_cos_threshold": 0.8,
@@ -448,6 +468,13 @@ class SamanticGarden:
         if VISUALIZATION_ENABLED:
             self.visualize_and_save_graph()
         print("--- ☀️ Memory Consolidation Complete ---\n")
+        
+        # Hanya visualisasi setiap 5 kali konsolidasi
+        if not hasattr(self, '_consolidation_count'):
+            self._consolidation_count = 0
+        self._consolidation_count += 1
+        if VISUALIZATION_ENABLED and self._consolidation_count % 5 == 0:
+            self.visualize_and_save_graph()
 
     # -------------------------------------------------------------------------
     #  Abstraction creation
@@ -578,6 +605,7 @@ class SamanticGarden:
                 "importance": node.importance,
                 "synapses": [{"target": s.target.id, "strength": s.strength} for s in node.synapses],
                 "num_arms": node.num_arms,
+                "rl_state": node.get_rl_state(),
             }
         try:
             import json
@@ -604,6 +632,9 @@ class SamanticGarden:
                     ndata.get("keywords", []),
                     num_arms=ndata.get("num_arms", self.config["num_arms_per_node"])
                 )
+                if "rl_state" in ndata:
+                    node.sat_rl_state(ndata["rl_state"])
+                
                 node.id = nid
                 node.importance = ndata["importance"]
                 self.nodes[nid] = node
