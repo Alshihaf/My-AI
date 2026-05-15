@@ -1,32 +1,32 @@
-# 🧠 Samre — Autonomous Cognitive Agent (v2.5.0)
+# Samre — Autonomous Cognitive Agent (v2.5.0)
 
 **Samre** adalah agen kognitif otonom yang belajar, bernalar, dan berimajinasi secara mandiri.  
 
 Ia dibangun di atas perpaduan **pengetahuan berbasis graf (RL)**, **penalaran simbolik**, **simulasi probabilistik**, dan **neuromodulasi**—memungkinkannya terus tumbuh tanpa aturan kaku.
 
-## ✨ Fitur Utama
+## Fitur Utama
 
-- 🧬 **Pengetahuan Hidup** – Samantic Garden v4.0 dengan node RL (REINFORCE + Multi‑Armed Bandit) yang terus belajar dari pengalaman.
+- **Pengetahuan Hidup** – Samantic Garden v4.0 dengan node RL (REINFORCE + Multi‑Armed Bandit) yang terus belajar dari pengalaman.
 
-- ⚖️ **Pengambilan Keputusan Adaptif** – `LinearActionValue` belajar online dari *reward*, tidak bergantung pada aturan hardcoded.
+- **Pengambilan Keputusan Adaptif** – `LinearActionValue` belajar online dari *reward*, tidak bergantung pada aturan hardcoded.
 
-- 🌌 **Imajinasi & Simulasi** – Modul `Imagination` menjalankan ribuan skenario berlapis untuk mengeksplorasi kemungkinan.
+- **Imajinasi & Simulasi** – Modul `Imagination` menjalankan ribuan skenario berlapis untuk mengeksplorasi kemungkinan.
 
-- 🧘 **Penalaran Reflektif** – Aksi `CONTEMPLATE` membuktikan relasi logis antar konsep menggunakan mesin *backward chaining*.
+- **Penalaran Reflektif** – Aksi `CONTEMPLATE` membuktikan relasi logis antar konsep menggunakan mesin *backward chaining*.
 
-- 📂 **Data Ingestion Otomatis** – File di folder `data/` (CSV, JSON, teks) otomatis diubah menjadi pengetahuan.
+- **Data Ingestion Otomatis** – File di folder `data/` (CSV, JSON, teks) otomatis diubah menjadi pengetahuan.
 
-- 💤 **Konsolidasi Memori** – Tidur sibernetik: pruning, replay, abstraksi, dan evolusi kebijakan node.
+- **Konsolidasi Memori** – Tidur sibernetik: pruning, replay, abstraksi, dan evolusi kebijakan node.
 
-- 🧠 **Neuromodulator** – Dopamin, serotonin, noradrenalin, dan asetilkolin memengaruhi pembelajaran dan eksplorasi.
+- **Neuromodulator** – Dopamin, serotonin, noradrenalin, dan asetilkolin memengaruhi pembelajaran dan eksplorasi.
 
-- ⛰️ **Geologi Nyata** – Terhubung ke [Macrostrat API](https://macrostrat.org) untuk belajar dari data geologi dunia.
+- **Geologi Nyata** – Terhubung ke [Macrostrat API](https://macrostrat.org) untuk belajar dari data geologi dunia.
 
-- 🛡️ **Executive Gatekeeper** – Lapisan keamanan yang mencegah aksi berbahaya sebelum dieksekusi.
+- **Executive Gatekeeper** – Lapisan keamanan yang mencegah aksi berbahaya sebelum dieksekusi.
 
 ---
 
-## 🧱 Arsitektur Singkat
+## Struktur Folder
 
 ```
 data/                  ← letakkan CSV/JSON/TXT di sini
@@ -51,7 +51,7 @@ act/                     ← aktuator aksi (explore, learn, reason, evolve)
 
 ---
 
-## 🚀 Memulai
+## Memulai
 
 ### Prasyarat
 - Python 3.8+
@@ -72,7 +72,7 @@ Saat pertama kali dijalankan, Samre akan bootstrap pengetahuan dari kode sumbern
 
 ---
 
-## 📊 Menambahkan Data
+## Menambahkan Data
 
 1. Buat folder data/ (otomatis dibuat jika belum ada).
 2. Letakkan file dataset di sana. Format yang didukung: .csv, .json, .txt, .md, .py, dll.
@@ -89,7 +89,7 @@ data/
 
 ---
 
-## ⚙️ Konfigurasi Utama
+## Konfigurasi Utama
 
 Semua parameter penting bisa diubah langsung di dictionary config di SamanticGarden:
 
@@ -101,31 +101,21 @@ abstraction_cos_threshold 0.8 Kekuatan bidirectional minimum untuk menciptakan a
 
 ---
 
-## 📝 Status Pengembangan
+## Status Pengembangan
 
 v2.5.0 adalah lompatan besar dari versi sebelumnya:
 
-· ✅ Node pengetahuan berbasis RL menggantikan sub‑mind berbasis ANN
-· ✅ Penilaian aksi belajar online (tidak lagi hardcoded)
-· ✅ Aksi CONTEMPLATE untuk penalaran simbolik deduktif
-· ✅ Data ingestion otomatis dari folder data/
-· ✅ Perbaikan cognitive load death spiral
-· ✅ Neuromodulator merespons kondisi fisik (efek domino)
-· ✅ Threshold similarity diturunkan untuk memperkaya graf
+- Node pengetahuan berbasis RL menggantikan sub‑mind berbasis ANN
+- Penilaian aksi belajar online (tidak lagi hardcoded)
+- Aksi CONTEMPLATE untuk penalaran simbolik hardcoded
+- Data ingestion otomatis dari folder data/
+- Perbaikan cognitive load death spiral
+- Neuromodulator merespons kondisi fisik (efek domino)
+- Threshold similarity diturunkan untuk memperkaya graf
 
 Roadmap mendatang:
 
 · Antarmuka percakapan (natural language)
 · Planner adaptif (belajar dari pengalaman)
 · CognitiveEngine belajar online (tidak statis)
-· Visualisasi pengetahuan interaktif
-
----
-
-🤝 Kontribusi
-
-Proyek ini masih dalam pengembangan aktif. Jika kamu menemukan bug atau punya ide, silakan buka issue atau kirim pull request.
-
----
-
-# Dikembangkan oleh [Alshihaf](https://alshihaf.github.io/asad-portfolio)
+· Visualisasi pengetahuan interaktif-portfolio)
